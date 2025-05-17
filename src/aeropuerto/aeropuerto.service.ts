@@ -38,6 +38,21 @@ export class AeropuertoService {
   }
 
   async create(aeropuerto: AeropuertoEntity): Promise<AeropuertoEntity> {
+    const existingAeropuertoByCodigo = await this.aeropuertoRepository.findOne({ where: { codigo: aeropuerto.codigo } });
+    if (existingAeropuertoByCodigo) {
+      throw new BusinessLogicException(
+        `Ya existe un aeropuerto con el código ${aeropuerto.codigo}`,
+        BusinessError.PRECONDITION_FAILED,
+      );
+    }
+
+    const existingAeropuertoByName = await this.aeropuertoRepository.findOne({ where: { nombre: aeropuerto.nombre } });
+    if (existingAeropuertoByName) {
+      throw new BusinessLogicException(
+        `Ya existe un aeropuerto con el nombre ${aeropuerto.nombre}`,
+        BusinessError.PRECONDITION_FAILED,
+      );
+    }
     this.validateCodigoAeropuerto(aeropuerto.codigo);
     return await this.aeropuertoRepository.save(aeropuerto);
   }

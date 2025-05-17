@@ -39,6 +39,13 @@ export class AerolineaService {
   }
 
   async create(aerolinea: AerolineaEntity): Promise<AerolineaEntity> {
+    const existingAerolineaByName = await this.aerolineaRepository.findOne({ where: { nombre: aerolinea.nombre } });
+    if (existingAerolineaByName) {
+      throw new BusinessLogicException(
+        `Ya existe una aerolínea con el nombre ${aerolinea.nombre}`,
+        BusinessError.PRECONDITION_FAILED,
+      );
+    }
     this.validateFechaFundacion(aerolinea.fechaFundacion);
     return await this.aerolineaRepository.save(aerolinea);
   }
