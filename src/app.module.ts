@@ -11,6 +11,11 @@ import { AerolineaAeropuertoModule } from './aerolinea-aeropuerto/aerolinea-aero
 @Module({
   imports: [
     TypeOrmModule.forRoot({
+      // SQLite database for development
+      // type: 'sqlite',
+      // database: 'db/aerolineas_dev.sqlite',
+      // entities: [AerolineaEntity, AeropuertoEntity],
+      // synchronize: true,
       type: 'postgres',
       host: 'localhost',
       port: 5432,
