@@ -1,0 +1,423 @@
+{
+	"info": {
+		"_postman_id": "4b0af333-4fa4-4563-a031-a3e1bc777c9e",
+		"name": "Aeropuertos API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30718838"
+	},
+	"item": [
+		{
+			"name": "POST - Crear un aeropuerto válido",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201 Created\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"createdAirportId\", jsonData.id);",
+							"pm.test(\"Airport ID saved\", function() {",
+							"    pm.expect(pm.collectionVariables.get(\"createdAirportId\")).to.eql(jsonData.id);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function generateAirportCode() {",
+							"    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';",
+							"    let result = '';",
+							"    for (let i = 0; i < 3; i++) {",
+							"        result += characters.charAt(Math.floor(Math.random() * characters.length));",
+							"    }",
+							"    return result;",
+							"}",
+							"",
+							"const randomAirportName = `Aeropuerto Internacional ${pm.variables.replaceIn(\"{{$randomWord}}\")}-${pm.variables.replaceIn(\"{{$randomInt}}\")}`;",
+							"const randomAirportCode = generateAirportCode();",
+							"const randomCountry = `País ${pm.variables.replaceIn(\"{{$randomWord}}\")}`;",
+							"const randomCity = `Ciudad ${pm.variables.replaceIn(\"{{$randomWord}}\")}`;",
+							"",
+							"pm.collectionVariables.set(\"dynamicAirportName\", randomAirportName);",
+							"pm.collectionVariables.set(\"dynamicAirportCode\", randomAirportCode);",
+							"pm.collectionVariables.set(\"dynamicAirportCountry\", randomCountry);",
+							"pm.collectionVariables.set(\"dynamicAirportCity\", randomCity);",
+							"",
+							"console.log(\"Generated Airport Name:\", randomAirportName);",
+							"console.log(\"Generated Airport Code:\", randomAirportCode);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"{{dynamicAirportName}}\",\n    \"codigo\": \"{{dynamicAirportCode}}\",\n    \"pais\": \"{{dynamicAirportCountry}}\",\n    \"ciudad\": \"{{dynamicAirportCity}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airports",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST - Crear un aeropuerto inválido (código incorrecto)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 412 Precondition Failed or 400 Bad Request\", function () {",
+							"    // El código puede ser 412 por lógica de negocio o 400 por ValidationPipe",
+							"    pm.expect(pm.response.code).to.be.oneOf([400, 412]);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Aeropuerto Codigo Invalido\",\n    \"codigo\": \"TOOLONG\",\n    \"pais\": \"País Inválido\",\n    \"ciudad\": \"Ciudad Inválida\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airports",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener todos los aeropuertos",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response is an array\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airports",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener un aeropuerto por ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response has correct ID\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get(\"createdAirportId\"));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{createdAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{createdAirportId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener un aeropuerto por un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{nonExistentAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{nonExistentAirportId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Actualizar un aeropuerto",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Airport name updated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.nombre).to.eql(\"Aeropuerto Central Actualizado\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Aeropuerto Central Actualizado\",\n    \"codigo\": \"ACA\",\n    \"pais\": \"País Actualizado\",\n    \"ciudad\": \"Ciudad Actualizada\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{createdAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{createdAirportId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Actualizar un aeropuerto con un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Intento Actualizar Aeropuerto Inexistente\",\n    \"codigo\": \"NOP\",\n    \"pais\": \"N/A\",\n    \"ciudad\": \"N/A\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{nonExistentAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{nonExistentAirportId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE - Eliminar un aeropuerto por su ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204 No Content\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{createdAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{createdAirportId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE - Eliminar un aeropuerto con un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airports/{{nonExistentAirportId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airports",
+						"{{nonExistentAirportId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1"
+		},
+		{
+			"key": "createdAirportId",
+			"value": ""
+		},
+		{
+			"key": "nonExistentAirportId",
+			"value": "-1"
+		},
+		{
+			"key": "dynamicAirportName",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirportCode",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirportCountry",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirportCity",
+			"value": ""
+		}
+	]
+}

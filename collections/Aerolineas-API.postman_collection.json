@@ -1,0 +1,421 @@
+{
+	"info": {
+		"_postman_id": "faaf5135-bd73-4bdb-b48d-61aa4473c223",
+		"name": "Aerolineas API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30718838"
+	},
+	"item": [
+		{
+			"name": "POST - Crear una aerolínea válida",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201 Created\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"const jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"createdAirlineId\", jsonData.id);",
+							"pm.test(\"Airline ID saved\", function() {",
+							"    pm.expect(pm.collectionVariables.get(\"createdAirlineId\")).to.eql(jsonData.id);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function getRandomPastDateISO() {",
+							"    const year = 2000 + Math.floor(Math.random() * 10);",
+							"    const month = Math.floor(Math.random() * 12) + 1;  ",
+							"    const day = Math.floor(Math.random() * 28) + 1;    ",
+							"    ",
+							"    const date = new Date(year, month - 1, day);",
+							"    return date.toISOString();",
+							"}",
+							"",
+							"const randomAirlineName = `Aerolínea ${pm.variables.replaceIn(\"{{$randomCompanyName}}\")}`;",
+							"const randomDescription = `Una descripción detallada para ${randomAirlineName}. ${pm.variables.replaceIn(\"{{$randomWords}}\")}`;",
+							"const randomFoundationDate = getRandomPastDateISO();",
+							"const randomWebsite = `https://www.${pm.variables.replaceIn(\"{{$randomWord}}\")}.com`;",
+							"",
+							"pm.collectionVariables.set(\"dynamicAirlineName\", randomAirlineName);",
+							"pm.collectionVariables.set(\"dynamicAirlineDescription\", randomDescription);",
+							"pm.collectionVariables.set(\"dynamicAirlineFoundationDate\", randomFoundationDate);",
+							"pm.collectionVariables.set(\"dynamicAirlineWebsite\", randomWebsite);",
+							"",
+							"console.log(\"Generated Foundation Date:\", randomFoundationDate);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"{{dynamicAirlineName}}\",\n    \"descripcion\": \"{{dynamicAirlineDescription}}\",\n    \"fechaFundacion\": \"{{dynamicAirlineFoundationDate}}\",\n    \"paginaWeb\": \"{{dynamicAirlineWebsite}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airlines",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST - Crear una aerolínea inválida (fecha futura)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 412 Precondition Failed\", function () {",
+							"    pm.response.to.have.status(412);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Aerolinea Invalida Fecha\",\n    \"descripcion\": \"Descripción de una aerolínea inválida\",\n    \"fechaFundacion\": \"2077-01-01T00:00:00.000Z\",\n    \"paginaWeb\": \"https://invalida.example.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airlines",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener todas las aerolíneas",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response is an array\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airlines",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener una aerolínea por ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response has correct ID\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get(\"createdAirlineId\"));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{createdAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{createdAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET - Obtener una aerolínea por un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{nonExistentAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{nonExistentAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Actualizar una aerolínea",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Airline name updated\", function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.nombre).to.eql(\"Aerolinea Actualizada\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Aerolinea Actualizada\",\n    \"descripcion\": \"Descripción actualizada\",\n    \"fechaFundacion\": \"1999-05-20T00:00:00.000Z\",\n    \"paginaWeb\": \"https://actualizada.example.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{createdAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{createdAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT - Actualizar una aerolínea con un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"nombre\": \"Intento De Actualizar Aerolinea Inexistente\",\n    \"descripcion\": \"No debería funcionar\",\n    \"fechaFundacion\": \"2000-01-01T00:00:00.000Z\",\n    \"paginaWeb\": \"https://inexistente.example.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{nonExistentAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{nonExistentAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE - Eliminar una aerolínea por su ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204 No Content\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{createdAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{createdAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE - Eliminar una aerolínea con un ID que no existe",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 Not Found\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/airlines/{{nonExistentAirlineId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"airlines",
+						"{{nonExistentAirlineId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1"
+		},
+		{
+			"key": "createdAirlineId",
+			"value": ""
+		},
+		{
+			"key": "nonExistentAirlineId",
+			"value": "-1"
+		},
+		{
+			"key": "dynamicAirlineName",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirlineDescription",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirlineFoundationDate",
+			"value": ""
+		},
+		{
+			"key": "dynamicAirlineWebsite",
+			"value": ""
+		}
+	]
+}
